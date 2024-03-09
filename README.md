@@ -2,6 +2,8 @@ code made for teensy 4.1
 
 do not edit on main, use a different branch for changes and then merge onto main once the functionality works and is bug-free
 
+---
+
 to start EDF:
 1. compile and push the code to the teensy using Arduino IDE or an alternative.
 2. open the serial monitor and send the message "180" to the teensy.
@@ -13,7 +15,6 @@ to start EDF:
 8. the thrust value can be changed as needed by repeating step 7.
 9. to turn off the EDF, send a message to the teensy of "0".
 
-
--------
+---
 
 To connect the breadboard to the ESC the brown wire is the ground, the red wire is live and the signal is the yellow wire.
