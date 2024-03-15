@@ -17,3 +17,7 @@
 #ifndef RAD_TO_DEG
 #define RAD_TO_DEG 57.295779513f
 #endif
+
+#ifndef SEA_LEVEL_PRESSURE
+#define SEA_LEVEL_PRESSURE 101325
+#endif
