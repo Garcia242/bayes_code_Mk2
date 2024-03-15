@@ -1,94 +1,98 @@
 #include <Wire.h>
-#include <SPI.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_BNO055.h>
-#include <DFRobot_BMP280.h>
-#include <utility/imumaths.h>
 #include "coordinate.hpp"
+#include <DFRobot_BMP280.h>
+#include <Adafruit_BNO055.h>
+#include <Adafruit_Sensor.h>
+#include <utility/imumaths.h>
 
 #ifndef SENSOR_H
 #define SENSOR_H
 
-class Sensor
-{
-    Adafruit_BNO055 imu = Adafruit_BNO055(55);
-    DFRobot_BMP280* bmp;
+typedef DFRobot_BMP280_IIC BMP;
+BMP bmp(&Wire, BMP::eSdoLow);
+
+class Sensor {
+    Adafruit_BNO055 imu = Adafruit_BNO055(55, 0x28, &Wire);
+    sensors_event_t orientation;
+    sensors_event_t accelerometer;
+    sensors_event_t angular_velocity;
+    sensors_event_t magnetometer;
+    float temperature;
+    uint32_t pressure;
+    float altitude;
 
 public:
 
-    // Sensor(bool calibrate_status)
-    // {
-    //     // this->calibrate = calibrate_status;
-    // }
+    // FOR BMP280 FAILURE DETECTION
+    void printLastOperateStatus(BMP::eStatus_t eStatus) {
+      switch(eStatus) {
+      case BMP::eStatusOK:    Serial.println("everything ok"); break;
+      case BMP::eStatusErr:   Serial.println("unknow error"); break;
+      case BMP::eStatusErrDeviceNotDetected:    Serial.println("device not detected"); break;
+      case BMP::eStatusErrParameter:    Serial.println("parameter error"); break;
+      default: Serial.println("unknow status"); break;
+      }
+    }
 
-    void init()
-    {
-                // START BMP
-        unsigned status_bmp = bmp->begin();
-        delay(1000);
-        if (status_bmp)
-        {
-            Serial.println("connected to BMP280");
+    // START: CHECK SENSOR CONNECTIONS
+    void init() {
+        // BNO055: CHECK SENSORS
+        if(!imu.begin()) {
+          Serial.println("BAYES IMU NOT DETECTED, GO FYU!");
         }
 
-        // START IMU
-        // unsigned status_imu = imu.begin();
-        // delay(1000);
-        // imu.setExtCrystalUse(true);
-        // if (status_imu)
-        // {
-        //     Serial.println("connected to BNO055");
-        // }
-        
-
+        // BMP280: CHECK SENSORS
+        bmp.reset();
+        while(bmp.begin() != BMP::eStatusOK) {
+          Serial.println("bmp begin faild");
+          printLastOperateStatus(bmp.lastOperateStatus);
+          delay(2000);
+        }
     }
 
-    Vector3 getOrientation()
-    {
-        imu::Vector<3> ori = imu.getVector(Adafruit_BNO055::VECTOR_EULER);
-        return Vector3(ori.x(), ori.y(), ori.z());
+    Vector3 getOrientation() {
+        imu.getEvent(&orientation, Adafruit_BNO055::VECTOR_EULER);
+        return Vector3(orientation.orientation.x, orientation.orientation.y, orientation.orientation.z);
     }
 
-    Vector3 getAcceleration()
-    {
-        imu::Vector<3> acc = imu.getVector(Adafruit_BNO055::VECTOR_ACCELEROMETER);
-        return Vector3(acc.x(), acc.y(), acc.z());
+    Vector3 getAcceleration() {
+        imu.getEvent(&accelerometer, Adafruit_BNO055::VECTOR_ACCELEROMETER);
+        return Vector3(accelerometer.acceleration.x, accelerometer.acceleration.y, accelerometer.acceleration.z);
     }
 
-    Vector3 getAngularVelocity()
-    {
-        imu::Vector<3> gyro = imu.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
-        return Vector3(gyro.x(), gyro.y(), gyro.z());
+    Vector3 getAngularVelocity() {
+        imu.getEvent(&angular_velocity, Adafruit_BNO055::VECTOR_GYROSCOPE);
+        return Vector3(angular_velocity.gyro.x, angular_velocity.gyro.y, angular_velocity.gyro.z);
     }
 
-    Vector3 getMagnetometer()
-    {
-        imu::Vector<3> mag = imu.getVector(Adafruit_BNO055::VECTOR_MAGNETOMETER);
-        return Vector3(mag.x(), mag.y(), mag.z());
+    Vector3 getMagnetometer() {
+        imu.getEvent(&magnetometer, Adafruit_BNO055::VECTOR_MAGNETOMETER);
+        return Vector3(magnetometer.magnetic.x, magnetometer.magnetic.y, magnetometer.magnetic.z);
     }
 
-    Quaternion getQuaternion()
-    {
+    Quaternion getQuaternion() {
         imu::Quaternion quat = imu.getQuat();
         return Quaternion(quat.w(), quat.x(), quat.y(), quat.z());
     }
 
-    uint32_t getPressure()
-    {
-        return bmp->getPressure();
+    float getTemperature() {
+        temperature = bmp.getTemperature();
+        return temperature;
     }
 
-    float getAmplitude()
-    {
-        auto pressure = getPressure();
-        return bmp->calAltitude(1013.25, pressure);
+    uint32_t getPressure() {
+        pressure = bmp.getPressure();
+        return pressure;
     }
 
-
-
-    float getTemperature()
-    {
-        return bmp->getTemperature();
+    float getAltitude() {
+        // altitude = bmp.calAltitude(SEA_LEVEL_PRESSURE, pressure);
+        float a = 2.25577e-5;
+        float b = 5.25588;
+        float pressure = getPressure();
+        float numerator = 1 - pow(10, (log10(pressure / SEA_LEVEL_PRESSURE)) / (b));
+        altitude = numerator / a;
+        return altitude;
     }
 };
 
