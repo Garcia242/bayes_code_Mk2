@@ -21,6 +21,13 @@ public:
     float y = 0.0f;
     float z = 0.0f;
 
+    /**
+     * Create a new Vector3 object from craft attitude data.
+     * @brief Constructor.
+     * @param x: Pitch value.
+     * @param y: Roll value.
+     * @param z: Yaw value.
+     */
     Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
     ~Vector3() {}
 
@@ -61,6 +68,14 @@ public:
     float y = 0.0f;
     float z = 0.0f;
 
+    /**
+     * Create a new Quaternion object from craft attitude data.
+     * @brief Constructor.
+     * @param w: Real component of quaternion.
+     * @param x: Imaginary component of quaternion along i axis.
+     * @param y: Imaginary component of quaternion along j axis.
+     * @param z: Imaginary component of quaternion along k axis.
+     */
     Quaternion(float w, float x, float y, float z) : w(w), x(x), y(y), z(z) {}
     ~Quaternion() {}
 
