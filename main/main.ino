@@ -1,13 +1,26 @@
+/**
+* @section DESCRIPTION
+*
+* Create an instance of the sensor, then prints out mission parameters.
+*/
+
 #include "sensors.hpp"
 
+// Create a sensor object for the sensors.
 Sensor sensor;
 
+/**
+* @brief Set the baud rate and initialise the sensors.
+*/
 void setup()
 {
     Serial.begin(9600);
     sensor.init();
 }
 
+/**
+ * @brief Retrieve data from the sensors and print it out.
+ */
 void loop()
 {
     // Serial.println(sensor.getAcceleration().x);
