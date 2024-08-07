@@ -25,7 +25,7 @@ public:
 
 #ifndef QUATERNION_H
 #define QUATERNION_H
-
+// Creating a new custom data type Quaternion
 class Quaternion
 {
 public:
