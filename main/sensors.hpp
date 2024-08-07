@@ -4,8 +4,7 @@
 #include <Adafruit_BNO055.h>
 #include <Adafruit_Sensor.h>
 #include <utility/imumaths.h>
-#include "altitude_kf.hpp"
-#include "angle_kf.hpp"
+#include "kalman_filter.hpp"
 
 #ifndef SENSOR_H
 #define SENSOR_H
@@ -55,6 +54,7 @@ class Sensor {
                 printLastOperateStatus(bmp.lastOperateStatus);
                 delay(2000);
             }
+            // To remove bias that exists with altitude data
             normalise_alt = 0;
             for (int i=0; i < 600; i++) {
                 float pressure_sensor_data = float(Sensor::getPressure());
@@ -112,15 +112,14 @@ class Sensor {
             return pressure;
         }
 
-        float roundToNearestQuarter(float value) {
-            return round(value * 4.0) / 4.0;
-        }
-
         float getAltitude() {
             Vector3 linear_accel = Sensor::getLinearAcceleration();
             float pressure_sensor_data = float(Sensor::getPressure());
             float alt_z = 44330 * (1.0 - pow((pressure_sensor_data / SEA_LEVEL_PRESSURE), (1.0 / 5.225))) - normalise_alt;
-
+            
+            float roundToNearestQuarter(float value) {
+                return round(value * 4.0) / 4.0;
+            }
             altitude = kalman_filter_accelz.filter(linear_accel.z, alt_z);
             return  roundToNearestQuarter(altitude);
         }
