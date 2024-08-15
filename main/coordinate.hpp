@@ -10,8 +10,11 @@ public:
     float y = 0.0f;
     float z = 0.0f;
 
-    Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
-    ~Vector3() {}
+    Vector3(float x_imput, float y_input, float z_input) {
+        x = x_imput;
+        y = y_input;
+        z = z_input;
+    }
 
     Vector3 toRadians() {
         return Vector3(x * DEG_TO_RAD, y * DEG_TO_RAD, z * DEG_TO_RAD);
@@ -34,8 +37,12 @@ public:
     float y = 0.0f;
     float z = 0.0f;
 
-    Quaternion(float w, float x, float y, float z) : w(w), x(x), y(y), z(z) {}
-    ~Quaternion() {}
+    Quaternion(float w_input, float x_input, float y_input, float z_input) {
+        w = w_input;
+        x = x_input;
+        y = y_input;
+        z = z_input;
+    }
 
     Vector3 toRadians() const {
         float pitch = -1 * PI / 2 + 2 * atan2(sqrt(1 + 2 * (w * y - x * z)), sqrt(1 - 2 * (w * y - x * z)));
