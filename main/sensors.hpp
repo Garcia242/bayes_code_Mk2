@@ -1,20 +1,17 @@
 #include <Wire.h>
+#include "kfilter.hpp"
 #include "coordinate.hpp"
-#include <DFRobot_BMP280.h>
 #include <Adafruit_BNO055.h>
+#include <Adafruit_DPS310.h>
 #include <Adafruit_Sensor.h>
 #include <utility/imumaths.h>
-#include "kalman_filter.hpp"
 
 #ifndef SENSOR_H
 #define SENSOR_H
-
-typedef DFRobot_BMP280_IIC BMP;
-BMP bmp(&Wire, BMP::eSdoLow);
-
 class Sensor {
     public:
         Adafruit_BNO055 imu = Adafruit_BNO055(55, 0x28, &Wire);
+        Adafruit_DPS310 dps;
         Angle_KF kalman_filter_pitch = Angle_KF(0.25, 0.0f);
         Angle_KF kalman_filter_roll = Angle_KF(0.25, 0.0f);
         Angle_KF kalman_filter_yaw = Angle_KF(0.25, 0.0f);
@@ -24,45 +21,44 @@ class Sensor {
         sensors_event_t angular_velocity;
         sensors_event_t magnetometer;
         sensors_event_t linear_acceleration;
-        float temperature;
-        uint32_t pressure;
+        sensors_event_t temp_event;
+        sensors_event_t pressure_event;
+        Adafruit_Sensor *dps_temp = dps.getTemperatureSensor();
+        Adafruit_Sensor *dps_pressure = dps.getPressureSensor();
         float altitude;
         float normalise_alt;
-
-
-        // FOR BMP280 FAILURE DETECTION
-        void printLastOperateStatus(BMP::eStatus_t eStatus) {
-            switch(eStatus) {
-                case BMP::eStatusOK:    Serial.println("Everything OK"); break;
-                case BMP::eStatusErr:   Serial.println("Unknown Error"); break;
-                case BMP::eStatusErrDeviceNotDetected:    Serial.println("Device Not Detected"); break;
-                case BMP::eStatusErrParameter:    Serial.println("Parameter Error"); break;
-                default: Serial.println("Unknown Status"); break;
-            }
-        }
 
         // START: CHECK SENSOR CONNECTIONS
         void init() {
             // BNO055: CHECK SENSORS
+            Wire.begin();
             if(!imu.begin()) {
-                Serial.println("BAYES IMU NOT DETECTED, GO FY!");
+                Serial.print("Bayes IMU not detected, go FY }:)")
+                Serial2.print("Bayes IMU not detected, go FY }:)");
+            } else {
+                Serial.println("Bayes IMU detected ;)"); 
+                Serial2.print("Bayes IMU detected ;)");
             }
-            // BMP280: CHECK SENSORS
-            bmp.reset();
-            while(bmp.begin() != BMP::eStatusOK) {
-                Serial.println("bmp begin faild");
-                printLastOperateStatus(bmp.lastOperateStatus);
-                delay(2000);
+            
+            // DPS310: CHECK SENSORS
+            if (! dps.begin_I2C(0x77, &Wire)) {
+                Serial.println("Bayes DPS not detected, go FY }:)");
+                Serial2.print("Bayes DPS not detected, go FY }:)");
+                while (1) yield();
             }
+            Serial.println("Bayes DPS detected ;)");
+            Serial2.print("Bayes DPS detected ;)");
+            dps.configurePressure(DPS310_64HZ, DPS310_64SAMPLES);
+            dps.configureTemperature(DPS310_64HZ, DPS310_64SAMPLES);
+
             // To remove bias that exists with altitude data
             normalise_alt = 0;
             for (int i=0; i < 600; i++) {
-                float pressure_sensor_data = float(Sensor::getPressure());
-                float alt_z = 44330 * (1.0 - pow((pressure_sensor_data / SEA_LEVEL_PRESSURE), (1.0 / 5.225)));
+                dps_pressure->getEvent(&pressure_event);
+                auto pressure = pressure_event.pressure; 
+                float alt_z = 44330 * (1.0 - pow(pressure / SEA_LEVEL_PRESSURE, 0.1903));
                 if (i >= 100) {
-                    normalise_alt += alt_z;
-                }
-            }
+                    normalise_alt += alt_z; } }
             normalise_alt = normalise_alt/500;
         }
 
@@ -103,23 +99,31 @@ class Sensor {
         }
 
         float getTemperature() {
-            temperature = bmp.getTemperature();
+            float temperature;
+            if (dps.temperatureAvailable()) {
+                dps_temp->getEvent(&temp_event);
+                temperature = temp_event.temperature; }
             return temperature;
+
         }
 
-        uint32_t getPressure() {
-            pressure = bmp.getPressure();
-            return pressure;
+        auto getPressure() {
+            if (dps.pressureAvailable()) {
+                dps_pressure->getEvent(&pressure_event);
+                auto pressure = pressure_event.pressure; 
+                return pressure; }
         }
-        float roundToNearestQuarter(float value) {
-            return round(value * 4.0) / 4.0;
+
+        float roundToNearestFifth(float value) {
+            return round(value * 5.0) / 5.0;
         }
+
         float getAltitude() {
             Vector3 linear_accel = Sensor::getLinearAcceleration();
             float pressure_sensor_data = float(Sensor::getPressure());
-            float alt_z = 44330 * (1.0 - pow((pressure_sensor_data / SEA_LEVEL_PRESSURE), (1.0 / 5.225))) - normalise_alt;
-            altitude = kalman_filter_accelz.filter(linear_accel.z, alt_z);
-            return  roundToNearestQuarter(altitude);
+            float alt_z = 44330 * (1.0 - pow(pressure_sensor_data / SEA_LEVEL_PRESSURE, 0.1903)) - normalise_alt;
+            float altitude = kalman_filter_accelz.filter(linear_accel.z, alt_z);
+            return roundToNearestFifth(alt_z);
         }
 };
 
