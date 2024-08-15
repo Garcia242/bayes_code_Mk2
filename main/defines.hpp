@@ -19,5 +19,5 @@
 #endif
 
 #ifndef SEA_LEVEL_PRESSURE
-#define SEA_LEVEL_PRESSURE 101325
+#define SEA_LEVEL_PRESSURE 1013.25f
 #endif
