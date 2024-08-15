@@ -47,6 +47,7 @@ class Controller {
     PID altitude_pid_controller;
     Sensor sensor;
 
+    // couldn't get the hanging curly bracket convention working 
     Controller(float roll_gain[], float pitch_gain[], float altitude_gain[], float desired_altitude):
         roll_controller(roll_gain[0], roll_gain[1], roll_gain[2], 0.1f, 0.0f),
         pitch_controller(pitch_gain[0], pitch_gain[1], pitch_gain[2], 0.1f, 0.0f),
