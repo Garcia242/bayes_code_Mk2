@@ -29,8 +29,8 @@ class Altitude_KF {
         A = {1.0f, dt, 0.0f, 1.0f};
         G = {0.5f*dt*dt, dt};
         H = {1.0f, 0.0f};
-        Q = {16.0f*pow(dt, 4), 32.0f*pow(dt, 3), 32.0f*pow(dt, 3), 64.0f*pow(dt, 2)};
-        R = {0.36f};
+        Q = {0.016f*pow(dt, 4), 0.032f*pow(dt, 3), 0.032f*pow(dt, 3), 0.064f*pow(dt, 2)};
+        R = {0.49f};
         // initialising all kalman filter dynamic matrices
         P.Fill(0.0f);
         P_pred.Fill(0.0f);
