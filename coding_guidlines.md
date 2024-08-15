@@ -1,7 +1,7 @@
 # Naming Conventions
 - snake_case for file names and .hpp should be used instead of .h when C++ is used.
 - snake_case for variable names
-- camelCase for function names
+- camel_case for function names
 - PascalCase for class, structure and enum names
 
 - "m_" in front of private variables inside classes
