@@ -53,8 +53,6 @@ class Bluetooth {
             Serial.begin(9600);
             Serial2.begin(9600);
             while (!Serial2) {;}
-            message();
-            message();
         }
 
         void update() {
