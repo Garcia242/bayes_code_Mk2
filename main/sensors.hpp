@@ -33,7 +33,7 @@ class Sensor {
             // BNO055: CHECK SENSORS
             Wire.begin();
             if(!imu.begin()) {
-                Serial.print("Bayes IMU not detected, go FY }:)")
+                Serial.print("Bayes IMU not detected, go FY }:)");
                 Serial2.print("Bayes IMU not detected, go FY }:)");
             } else {
                 Serial.println("Bayes IMU detected ;)"); 
