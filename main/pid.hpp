@@ -1,6 +1,6 @@
 #include <math.h>
-#include "sensors.hpp"
 #include <array>
+#include "sensors.hpp"
 
 #ifndef PID_H
 #define PID_H
@@ -62,21 +62,21 @@ class Controller {
         else {return input;}
     }
 
-    std::array<float, 2> orientation_controller() {
+    std::array<int, 2> orientation_controller() {
         Vector3 orientation_data = Vector3(0.0f, 0.0f, 0.0f);
         orientation_data = sensor.getOrientation();
         float roll_control_signal = roll_controller.update(orientation_data.x);
         roll_control_signal = bounds_check(roll_control_signal, -90.0f, 90.0f);
         float pitch_control_signal = pitch_controller.update(orientation_data.y);
         pitch_control_signal =  bounds_check(pitch_control_signal, -90.0f, 90.0f);
-        return {roll_control_signal+90.0f, pitch_control_signal+90.0f};
+        return {int(roll_control_signal+90.0f), int(pitch_control_signal+90.0f)};
     }
 
-    float altitude_controller() {
+    int altitude_controller() {
         float altitude_data = sensor.getAltitude();
         float altitude_control_signal = altitude_pid_controller.update(altitude_data);
         altitude_control_signal = bounds_check(altitude_control_signal, 0.0f, 180.0f);
-        return altitude_control_signal;
+        return int(altitude_control_signal);
     }
 };
 #endif // CONTROLLER_H
