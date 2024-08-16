@@ -1,20 +1,13 @@
-#include "sensors.hpp"
+#include "tvc.hpp"
 
-Sensor sensor;
+TVC my_tvc = TVC(10, 11);
 
 void setup()
 {
-    Serial.begin(9600);
-    sensor.init();
+    my_tvc.init();
 }
 
 void loop()
 {
-    // Serial.println(sensor.getAcceleration().x);
-    // Serial.println(sensor.getAngularVelocity().x);
-    // Serial.println(sensor.getMagnetometer().x);
-    // float alt = (1-pow(10, log10(pres/SEA_LEVEL_PRESSURE)/5.25588))/(2.25577e-5);
-    float alt = sensor.getAltitude();
-    Serial.println(alt);
-    delay(1000);
+    my_tvc.update(45, 45);
 }
