@@ -34,20 +34,20 @@ class Sensor {
             Wire.begin();
             if(!imu.begin()) {
                 Serial.print("Bayes IMU not detected, go FY }:)");
-                Serial2.print("Bayes IMU not detected, go FY }:)");
+                Serial2.print("Bayes IMU not detected, go FY }:) \n");
             } else {
                 Serial.println("Bayes IMU detected ;)"); 
-                Serial2.print("Bayes IMU detected ;)");
+                Serial2.print("Bayes IMU detected ;) \n");
             }
             
             // DPS310: CHECK SENSORS
             if (! dps.begin_I2C(0x77, &Wire)) {
                 Serial.println("Bayes DPS not detected, go FY }:)");
-                Serial2.print("Bayes DPS not detected, go FY }:)");
+                Serial2.print("Bayes DPS not detected, go FY }:) \n");
                 while (1) yield();
             }
             Serial.println("Bayes DPS detected ;)");
-            Serial2.print("Bayes DPS detected ;)");
+            Serial2.print("Bayes DPS detected ;) \n");
             dps.configurePressure(DPS310_64HZ, DPS310_64SAMPLES);
             dps.configureTemperature(DPS310_64HZ, DPS310_64SAMPLES);
 
@@ -67,8 +67,8 @@ class Sensor {
             Vector3 euler_angles = quaternion.toDegrees();
             Vector3 ang_vel = Sensor::getAngularVelocity();
             
-            float roll = kalman_filter_roll.filter(ang_vel.x, euler_angles.x-3);
-            float pitch = kalman_filter_pitch.filter(ang_vel.y, euler_angles.y+2);
+            float roll = kalman_filter_roll.filter(ang_vel.x, euler_angles.x-3.4);            // constant needed to adjust for bias
+            float pitch = kalman_filter_pitch.filter(ang_vel.y, euler_angles.y);        // constant needed to adjust for bias
             float yaw = kalman_filter_yaw.filter(ang_vel.z, euler_angles.z);
             return Vector3(roll, pitch, yaw);
         }

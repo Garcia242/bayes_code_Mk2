@@ -11,25 +11,29 @@ class EDF {
 
         EDF(int pin = 3) {
             edf_pin = pin;
-            edf_control_signal = 30; // Needs to start at this value, while starting
+            edf_control_signal = 180; // Needs to start at this value, while starting
         }
 
         void init() {
             delay(1000);  // global delay
             edf_servo.attach(edf_pin);
-            edf_servo.write(29);
-            delay(3000);  // waiting for indefinite beeping
-            edf_servo.write(180);  // should begin double beeping
-            delay(1000);  // within 4 double beeps, firing up the fan
-            edf_servo.write(edf_control_signal);
+            edf_servo.write(edf_control_signal);    // should begin double beeping
+            delay(5000);  
+            edf_servo.write(30);  // should do a long beep 
         }
 
-        void update(int control_angle) {
-            if (Serial.available()) {
-                auto user_command = Serial.readString();  // can only update in range 30-180
-                edf_control_signal = user_command.toInt();
-                edf_servo.write(edf_control_signal);
-            }
+        void update(String control_angle) {
+            if (control_angle != "None") {
+                int unmapped_angle = control_angle.toInt();
+                if (unmapped_angle == 0) {
+                    edf_control_signal = 30;
+                    edf_servo.write(edf_control_signal);
+                    Serial.println("The EDF fan has stopped!");
+                } else {
+                    edf_control_signal = map(unmapped_angle, 0, 100, 36, 180);
+                    edf_servo.write(edf_control_signal);
+                    Serial.println("The EDF fan is at " + String(edf_control_signal) + " (" + String(unmapped_angle) + "%).");
+                } }
         }
 };
 
@@ -43,6 +47,7 @@ class Bluetooth {
     public:
         int bluetooth_baud_rate;
         String incomingData;
+        String prev_message;
 
         Bluetooth(int baud_rate = 9600) {
             bluetooth_baud_rate = baud_rate;
@@ -55,19 +60,22 @@ class Bluetooth {
             while (!Serial2) {;}
         }
 
-        void update() {
+        String update() {
             if (Serial2.available()) {
                 char incomingChar = Serial2.read();
                 incomingData += incomingChar;
 
                 if (incomingChar == '\n') {
-                    Serial.print(incomingData);       
+                    Serial.print(incomingData);
+                    prev_message = incomingData;       
                     incomingData = "";            
-                    } }
+                    return prev_message; } 
+            }
 
             if (Serial.available()) {
                 String outgoingData = Serial.readStringUntil('\n');
                 Serial2.print("Sent from Teensy: " + outgoingData + '\n'); }
+            return "None";
         }
 
         void message(String chat) {

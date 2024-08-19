@@ -44,15 +44,15 @@ class Controller {
     public:
     PID roll_controller;
     PID pitch_controller;
-    PID altitude_pid_controller;
+    // PID altitude_pid_controller;
     Sensor sensor;
 
     // couldn't get the hanging curly bracket convention working
     // TODO: fix the hanging curly bracket convention
-    Controller(float roll_gain[], float pitch_gain[], float altitude_gain[], float desired_altitude):
+    Controller(float roll_gain[], float pitch_gain[]):
         roll_controller(roll_gain[0], roll_gain[1], roll_gain[2], 0.1f, 0.0f),
-        pitch_controller(pitch_gain[0], pitch_gain[1], pitch_gain[2], 0.1f, 0.0f),
-        altitude_pid_controller(altitude_gain[0], altitude_gain[1], altitude_gain[2], 0.1f, desired_altitude) {}
+        pitch_controller(pitch_gain[0], pitch_gain[1], pitch_gain[2], 0.1f, 0.0f) {}
+        // altitude_pid_controller(altitude_gain[0], altitude_gain[1], altitude_gain[2], 0.1f, desired_altitude) 
 
     void init() {
         sensor.init();
@@ -64,21 +64,26 @@ class Controller {
         else {return input;}
     }
 
-    std::array<int, 2> orientation_controller() {
+    std::array<float, 2> orientation_controller() {
         Vector3 orientation_data = Vector3(0.0f, 0.0f, 0.0f);
         orientation_data = sensor.getOrientation();
+
+        // Serial.print(orientation_data.x);
+        // Serial.print("\t");
+        // Serial.println(orientation_data.y);
+
         float roll_control_signal = roll_controller.update(orientation_data.x);
-        roll_control_signal = bounds_check(roll_control_signal, -90.0f, 90.0f);
+        roll_control_signal = bounds_check(roll_control_signal, -85.0f, 85.0f);
         float pitch_control_signal = pitch_controller.update(orientation_data.y);
-        pitch_control_signal =  bounds_check(pitch_control_signal, -90.0f, 90.0f);
-        return {int(roll_control_signal+90.0f), int(pitch_control_signal+90.0f)};
+        pitch_control_signal =  bounds_check(pitch_control_signal, -85.0f, 85.0f);
+        return {roll_control_signal+90.0f, pitch_control_signal+90.0f};
     }
 
-    int altitude_controller() {
-        float altitude_data = sensor.getAltitude();
-        float altitude_control_signal = altitude_pid_controller.update(altitude_data);
-        altitude_control_signal = bounds_check(altitude_control_signal, 0.0f, 180.0f);
-        return int(altitude_control_signal);
-    }
+    // int altitude_controller() {
+    //     float altitude_data = sensor.getAltitude();
+    //     float altitude_control_signal = altitude_pid_controller.update(altitude_data);
+    //     altitude_control_signal = bounds_check(altitude_control_signal, 0.0f, 180.0f);
+    //     return int(altitude_control_signal);
+    // }
 };
 #endif // CONTROLLER_H

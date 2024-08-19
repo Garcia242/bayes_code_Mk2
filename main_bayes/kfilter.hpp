@@ -84,8 +84,8 @@ class Angle_KF {
         A = {1.0f, -dt, 0.0f, 1.0f};
         G = {dt, 0};
         H = {1.0f, 0.0f};
-        Q = {0.003*dt, 0, 0, 0.03*dt};
-        R = {0.2f};
+        Q = {0.001*dt, 0, 0, 0.003*dt};
+        R = {0.3f};
         // initialising all kalman filter dynamic matrices
         P.Fill(0.0f);
         P_pred.Fill(0.0f);

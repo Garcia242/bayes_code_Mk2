@@ -4,19 +4,16 @@
 
 int roll_servo_pin = 11;
 int pitch_servo_pin = 10;
+int edf_on_flag = 0;
 
-float desired_altitude = 1.0f       // this is where the rocket will hover
-float roll_pid_gains = {0.1f, 0.1f, 0.1f};
-float pitch_pid_gains = {0.1f, 0.1f, 0.1f};
-float altitude_pid_gains = {0.1f, 0.1f, 0.1f};
+std::array<float, 2> tvc_angles = {0.0f, 0.0f};
+float roll_pid_gains[3] = {-2.0f, 0.0f, 0.5f};
+float pitch_pid_gains[3] = {2.0f, 0.0f, 0.5f};
 
-int land_flag = 0;
-int edf_thrust = 0.0f;
-int tvc_angles[2] = {0.0f, 0.0f};
-Bluetooth bayes_bluetooth;
 EDF bayes_edf;
+Bluetooth bayes_bluetooth;
 TVC bayes_tvc = TVC(roll_servo_pin, pitch_servo_pin);
-Controller bayes_controller = Controller(roll_pid_gains, pitch_pid_gains, altitude_pid_gains, desired_altitude)
+Controller bayes_controller = Controller(roll_pid_gains, pitch_pid_gains);
 
 void setup() {
     delay(1000);         // delay to indicate start of the code
@@ -28,11 +25,24 @@ void setup() {
     bayes_tvc.init();    // rotate edf 360o and stop at starting position
     bayes_bluetooth.message("Bayes thrust vector control gimbling initialised ;)");
     
-    delay(10000);        // please keep the rocket as still as possible, do not shake it now!
+    delay(1000);        // please keep the rocket as still as possible, do not shake it now!
     bayes_controller.init();
     bayes_bluetooth.message("Bayes sensors and pid controller's initialised ;)");
+
+    bayes_bluetooth.message("Get ready to turn the EDF switch ON");
+    delay(3000);
+    bayes_bluetooth.message("In 3 seconds turn EDF switch ON");
     bayes_edf.init(); 
-    bayes_bluetooth.message("IMPORTANT: EDF initialising... Don't write anything in serial !!!");
+    bayes_bluetooth.message("IMPORTANT: EDF initialising... Fire EDF!");
+    while (!edf_on_flag) {
+        String message = bayes_bluetooth.update();
+        if (message != "None") {
+            bayes_edf.update(message);
+            edf_on_flag = 1;
+            delay(100);
+        }
+    }
+    bayes_bluetooth.message("EDF initialised ;)");
 
     bayes_bluetooth.message("Bayes lifts off in T-minus 3.0 seconds.");
     delay(1000);
@@ -46,13 +56,11 @@ void setup() {
 }
 
 void loop() {
-    if (! land_flag) {
-        bayes_bluetooth.update();
-        edf_thrust = bayes_controller.altitude_controller();
-        tvc_angles = bayes_controller.orientation_controller();
-        land_flag = bayes_edf.update(edf_thrust);
-        bayes_tvc.update(tvc_angles[0], tvc_angles[1]);
-    }
+    String message = bayes_bluetooth.update();
+    bayes_edf.update(message);
+    tvc_angles = bayes_controller.orientation_controller();
+    bayes_tvc.update(tvc_angles[0], tvc_angles[1]);
+    delay(100);
 }
 
 // Next Year: Get the EDF PID controller working, so it hover's at one place stabely. For now we controled it manually.

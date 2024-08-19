@@ -6,8 +6,8 @@ int roll_servo_pin = 11;
 int pitch_servo_pin = 10;
 
 std::array<float, 2> tvc_angles = {0.0f, 0.0f};
-float roll_pid_gains[3] = {-1.0f, 0.0f, 0.01f};
-float pitch_pid_gains[3] = {1.0f, 0.0f, 0.01f};
+float roll_pid_gains[3] = {-2.0f, 0.0f, 0.5f};
+float pitch_pid_gains[3] = {2.0f, 0.0f, 0.5f};
 
 Bluetooth bayes_bluetooth;
 TVC bayes_tvc = TVC(roll_servo_pin, pitch_servo_pin);
@@ -34,4 +34,5 @@ void loop() {
     Serial.print("\t");
     Serial.println(tvc_angles[1]);
     bayes_tvc.update(int(tvc_angles[0]), int(tvc_angles[1]));
+    delay(100);
 }
