@@ -58,6 +58,8 @@ class Controller {
         sensor.init();
     }
 
+
+// EDF can't turn at every angle, if angle you're supposed to turn is too big, then you just turn by the maximum possible  
     float bounds_check(float input, float min_val, float max_val) {
         if(input > max_val) {return max_val;}
         else if(input < min_val) {return min_val;}
